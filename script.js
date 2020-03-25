@@ -1,22 +1,59 @@
-document.getElementById("speak").addEventListener("click", speakPressed);
+let playButton = document.getElementById("play");
+playButton.addEventListener("click", speakPressed);
+
+let wordTimeInput = document.getElementById("wordTime");
+wordTimeInput.addEventListener("input", wordTimeInputed);
+
 let tts = window.speechSynthesis;
 let words;
 let w;
-let wordSpeed = 0.5;
+let wordTime = 0.75;
+let play = false;
+
+function wordTimeInputed(e) {
+	if (wordTimeInput.value < 0 || isNaN(wordTimeInput.value)) {
+		wordTimeInput.value = 0
+	}
+}
 
 function speakPressed(e) {
-	let msg = document.getElementById("msg").value;
-	words = msg.split(" ");
-	w = 0;
-	stringPreparation()
+	if (play) {
+		playButton.innerHTML = "PLAY";
+		play = false;
+	} else {
+		playButton.innerHTML = "STOP";
+		play = true;
+		
+		wordTime = wordTimeInput.value;
+		
+		let msg = document.getElementById("msg").value;
+		msg = msg.replace(/([.,;:"()«»*!?\[\]_\/\\])/g," $1 ");
+		msg = msg.replace(/\s\s/g," ");
+		msg = msg.replace(/\n/g," ");
+		msg = msg.trim()
+		
+		if (wordTime <= 0) {
+			say(msg);
+			playButton.innerHTML = "PLAY";
+			play = false;
+		} else {
+			words = msg.split(" ");
+			w = 0;
+			stringPreparation();
+		}
+	}
 }
 
 function stringPreparation() {
-	if (w < words.length) {
+	if (w < words.length && play) {
 		say(words[w]);
-		let timeBetween = words[w].length*wordSpeed*1000;
+		let timeBetween = words[w].length*wordTime*1000+1000;
+		console.log(timeBetween)
 		w++;
 		setTimeout(stringPreparation,timeBetween);
+	} else {
+		playButton.innerHTML = "PLAY";
+		play = false;
 	}
 }
 
@@ -24,27 +61,6 @@ function say(word) {
 	let toSpeak = new SpeechSynthesisUtterance(word);
 	voices = tts.getVoices();
 	toSpeak.voice = voices[9];
-	
+
 	tts.speak(toSpeak);
-	
-	if (word.search(",") !== -1) {
-		toSpeak.text = "virgule";
-		tts.speak(toSpeak);
-	} if (word.search("[.]") !== -1) {
-		toSpeak.text = "point";
-		tts.speak(toSpeak);
-	} if (word.search(";") !== -1) {
-		toSpeak.text = "point virgule";
-		tts.speak(toSpeak);
-	} if (word.search(":") !== -1) {
-		console.log(word.search(":"))
-		toSpeak.text = "deux point";
-		tts.speak(toSpeak);
-	} if (word.search("!") !== -1) {
-		toSpeak.text = "point d'exclamation";
-		tts.speak(toSpeak);
-	} if (word.search("[?]") !== -1 && word.search("[?]") !== 0) {
-		toSpeak.text = "point d'intérogation";
-		//tts.speak(toSpeak);
-	}
 }
